@@ -50,6 +50,20 @@ public class LocalTimeServiceTests
     }
 
     [Fact]
+    public void UtcNow_default_factory_is_close_to_actual_now()
+    {
+        // arrange
+        var sut = new LocalTimeService("America/Denver");
+        var expected = DateTimeOffset.UtcNow;
+
+        // act
+        var actual = sut.UtcNow;
+
+        // assert
+        Assert.Equal(expected.DateTime, actual.DateTime, TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
     public void LocalNow_default_factory_is_close_to_actual_now()
     {
         // arrange
