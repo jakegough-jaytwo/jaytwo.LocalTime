@@ -4,12 +4,12 @@ namespace jaytwo.LocalTime;
 
 public class LocalTimeTranslator : ILocalTimeTranslator
 {
-    internal const bool DefaultThrowOnInvalidLocalTime = LocalTimeService.DefaultThrowOnInvalidLocalTime;
+    internal const bool DefaultThrowOnInvalidLocalTime = LocalTimeService.DefaultThrowOnInvalidInputTime;
 
-    public LocalTimeTranslator(string inputTimeZoneId, string outputTimeZoneId, bool throwOnInvalidLocalTime = DefaultThrowOnInvalidLocalTime)
+    public LocalTimeTranslator(string inputTimeZoneId, string outputTimeZoneId, bool throwOnInvalidInputTime = DefaultThrowOnInvalidLocalTime)
         : this(
-            inputLocalTimeService: new LocalTimeService(inputTimeZoneId, throwOnInvalidLocalTime),
-            outputLocalTimeService: new LocalTimeService(outputTimeZoneId, throwOnInvalidLocalTime))
+            inputLocalTimeService: new LocalTimeService(inputTimeZoneId, throwOnInvalidInputTime),
+            outputLocalTimeService: new LocalTimeService(outputTimeZoneId, throwOnInvalidInputTime))
     {
     }
 
@@ -45,9 +45,24 @@ public class LocalTimeTranslator : ILocalTimeTranslator
             InputLocalTimeService.GetDateTimeOffset(input));
 
     /// <summary>
+    /// Converts a local wall-clock <paramref name="localInput"/> in <see cref="InputTimeZoneId"/>
+    /// to the equivalent local <see cref="DateTimeOffset"/> in <see cref="OutputTimeZoneId"/>.
+    /// </summary>
+    public DateTimeOffset ToOutputDateTimeOffset(DateTime input, bool throwOnInvalidInputTime)
+        => OutputLocalTimeService.GetLocalDateTimeOffset(
+            InputLocalTimeService.GetDateTimeOffset(input, throwOnInvalidInputTime));
+
+    /// <summary>
     /// Same as <see cref="ToOutputLocalDateTimeOffset(DateTime)"/>, returning the local wall-clock
     /// <see cref="DateTime"/> (Kind=Unspecified) in <see cref="OutputTimeZoneId"/>.
     /// </summary>
     public DateTime ToOutputDateTime(DateTime input)
         => ToOutputDateTimeOffset(input).DateTime;
+
+    /// <summary>
+    /// Same as <see cref="ToOutputLocalDateTimeOffset(DateTime)"/>, returning the local wall-clock
+    /// <see cref="DateTime"/> (Kind=Unspecified) in <see cref="OutputTimeZoneId"/>.
+    /// </summary>
+    public DateTime ToOutputDateTime(DateTime input, bool throwOnInvalidInputTime)
+        => ToOutputDateTimeOffset(input, throwOnInvalidInputTime).DateTime;
 }

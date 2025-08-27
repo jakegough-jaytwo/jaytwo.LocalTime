@@ -5,12 +5,12 @@ namespace jaytwo.LocalTime;
 
 public class LocalTimeService : ILocalTimeService
 {
-    internal const bool DefaultThrowOnInvalidLocalTime = false;
+    internal const bool DefaultThrowOnInvalidInputTime = false;
 
     private readonly DateTimeZone _timeZone;
 
     public LocalTimeService(string timeZoneId)
-        : this(timeZoneId, throwOnInvalidLocalTime: DefaultThrowOnInvalidLocalTime)
+        : this(timeZoneId, throwOnInvalidLocalTime: DefaultThrowOnInvalidInputTime)
     {
     }
 
@@ -41,7 +41,7 @@ public class LocalTimeService : ILocalTimeService
 
     public static LocalTimeService Create(
         string timeZoneId,
-        bool throwOnInvalidLocalTime = DefaultThrowOnInvalidLocalTime,
+        bool throwOnInvalidLocalTime = DefaultThrowOnInvalidInputTime,
         Func<DateTimeOffset>? utcNowFactory = null)
         => new LocalTimeService(timeZoneId, throwOnInvalidLocalTime, utcNowFactory);
 
@@ -50,7 +50,7 @@ public class LocalTimeService : ILocalTimeService
     public DateTimeOffset GetDateTimeOffset(DateTime local)
         => GetDateTimeOffset(local, ThrowOnInvalidLocalTime);
 
-    public DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnInvalidLocalTime = false)
+    public DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnInvalidLocalTime)
         => GetZonedDateTime(local, throwOnInvalidLocalTime).ToDateTimeOffset();
 
     public DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input)

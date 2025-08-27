@@ -12,5 +12,9 @@ public interface ILocalTimeTranslator
 
     DateTimeOffset ToOutputDateTimeOffset(DateTime input);
 
+    DateTimeOffset ToOutputDateTimeOffset(DateTime input, bool throwOnInvalidInputTime);
+
     DateTime ToOutputDateTime(DateTime input);
+
+    DateTime ToOutputDateTime(DateTime input, bool throwOnInvalidInputTime);
 }
