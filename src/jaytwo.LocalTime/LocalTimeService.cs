@@ -5,17 +5,33 @@ namespace jaytwo.LocalTime;
 
 public class LocalTimeService : ILocalTimeService
 {
+    internal const bool DefaultThrowOnInvalidLocalTime = false;
+
     private readonly DateTimeZone _timeZone;
 
     public LocalTimeService(string timeZoneId)
+        : this(timeZoneId, throwOnInvalidLocalTime: DefaultThrowOnInvalidLocalTime)
+    {
+    }
+
+    public LocalTimeService(string timeZoneId, bool throwOnInvalidLocalTime)
+        : this(timeZoneId, throwOnInvalidLocalTime, utcNowFactory: null)
+    {
+    }
+
+    private LocalTimeService(string timeZoneId, bool throwOnInvalidLocalTime, Func<DateTimeOffset>? utcNowFactory)
     {
         _timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId)
             ?? throw new ArgumentException($"Could not resolve time zone: '{timeZoneId}'", nameof(timeZoneId));
+
+        ThrowOnInvalidLocalTime = throwOnInvalidLocalTime;
+
+        UtcNowFactory = utcNowFactory ?? (static () => DateTimeOffset.UtcNow);
     }
 
-    public Func<DateTimeOffset> UtcNowFactory { get; set; } = () => DateTimeOffset.UtcNow;
+    public Func<DateTimeOffset> UtcNowFactory { get; }
 
-    public bool ThrowOnInvalidLocalTime { get; set; } = false;
+    public bool ThrowOnInvalidLocalTime { get; }
 
     public string TimeZoneId => _timeZone.Id;
 
@@ -23,38 +39,22 @@ public class LocalTimeService : ILocalTimeService
 
     public DateTimeOffset LocalNow => GetLocalDateTimeOffset(UtcNow);
 
-    public DateTime GetUtcDateTimeFromLocal(DateTime input)
-        => GetUtcDateTimeFromLocal(input, ThrowOnInvalidLocalTime);
+    public static LocalTimeService Create(
+        string timeZoneId,
+        bool throwOnInvalidLocalTime = DefaultThrowOnInvalidLocalTime,
+        Func<DateTimeOffset>? utcNowFactory = null)
+        => new LocalTimeService(timeZoneId, throwOnInvalidLocalTime, utcNowFactory);
 
-    public DateTime GetUtcDateTimeFromLocal(DateTime input, bool throwOnInvalidLocalTime = false)
-        => GetLocalDateTimeOffset(input, throwOnInvalidLocalTime).UtcDateTime;
+    public object HealthCheck() => HealthCheck(UtcNow);
 
-    public DateTimeOffset GetLocalDateTimeOffset(DateTime input)
-        => GetLocalDateTimeOffset(input, ThrowOnInvalidLocalTime);
+    public DateTimeOffset GetDateTimeOffset(DateTime local)
+        => GetDateTimeOffset(local, ThrowOnInvalidLocalTime);
 
-    public DateTimeOffset GetLocalDateTimeOffset(DateTime input, bool throwOnInvalidLocalTime = false)
-        => GetZonedDateTime(input, throwOnInvalidLocalTime).ToDateTimeOffset();
+    public DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnInvalidLocalTime = false)
+        => GetZonedDateTime(local, throwOnInvalidLocalTime).ToDateTimeOffset();
 
     public DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input)
         => GetZonedDateTime(input).ToDateTimeOffset();
-
-    public DateTimeOffset GetLocalDateTimeOffsetFromUnixTimeSeconds(long input)
-        => GetLocalDateTimeOffset(DateTimeOffset.FromUnixTimeSeconds(input));
-
-    public DateTimeOffset GetLocalDateTimeOffsetFromUnixTimeMilliseconds(long input)
-        => GetLocalDateTimeOffset(DateTimeOffset.FromUnixTimeMilliseconds(input));
-
-    public DateTime GetLocalDateTime(DateTimeOffset input)
-        => GetZonedDateTime(input).ToDateTimeUnspecified();
-
-    public DateTime GetLocalDateTimeFromUtc(DateTime input)
-        => GetLocalDateTime(GetDateTimeOffsetFromUtc(input));
-
-    public DateTime GetLocalDateTimeFromUnixTimeSeconds(long input)
-        => GetLocalDateTime(DateTimeOffset.FromUnixTimeSeconds(input));
-
-    public DateTime GetLocalDateTimeFromUnixTimeMilliseconds(long input)
-        => GetLocalDateTime(DateTimeOffset.FromUnixTimeMilliseconds(input));
 
     internal ZonedDateTime GetZonedDateTime(DateTimeOffset input)
         => Instant.FromDateTimeOffset(input).InZone(_timeZone);
@@ -67,6 +67,14 @@ public class LocalTimeService : ILocalTimeService
             : localDateTime.InZoneLeniently(_timeZone);
     }
 
-    private static DateTimeOffset GetDateTimeOffsetFromUtc(DateTime input)
-        => new DateTimeOffset(DateTime.SpecifyKind(input, DateTimeKind.Utc));
+    internal object HealthCheck(DateTimeOffset utcNow)
+    {
+        return new
+        {
+            TimeZoneId,
+            UtcNow = utcNow,
+            LocalNow = GetLocalDateTimeOffset(utcNow),
+            ThrowOnInvalidLocalTime,
+        };
+    }
 }
