@@ -14,7 +14,7 @@ public interface ILocalTimeService
 
     DateTimeOffset GetDateTimeOffset(DateTime local);
 
-    DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnInvalidLocalTime);
+    DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnAmbiguousOrSkipped);
 
     DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input);
 }

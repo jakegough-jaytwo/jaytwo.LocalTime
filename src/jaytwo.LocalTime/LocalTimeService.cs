@@ -5,33 +5,33 @@ namespace jaytwo.LocalTime;
 
 public class LocalTimeService : ILocalTimeService
 {
-    internal const bool DefaultThrowOnInvalidInputTime = false;
+    internal const bool DefaultThrowOnAmbiguousOrSkipped = false;
 
     private readonly DateTimeZone _timeZone;
 
     public LocalTimeService(string timeZoneId)
-        : this(timeZoneId, throwOnInvalidLocalTime: DefaultThrowOnInvalidInputTime)
+        : this(timeZoneId, throwOnAmbiguousOrSkipped: DefaultThrowOnAmbiguousOrSkipped)
     {
     }
 
-    public LocalTimeService(string timeZoneId, bool throwOnInvalidLocalTime)
-        : this(timeZoneId, throwOnInvalidLocalTime, utcNowFactory: null)
+    public LocalTimeService(string timeZoneId, bool throwOnAmbiguousOrSkipped)
+        : this(timeZoneId, throwOnAmbiguousOrSkipped, utcNowFactory: null)
     {
     }
 
-    private LocalTimeService(string timeZoneId, bool throwOnInvalidLocalTime, Func<DateTimeOffset>? utcNowFactory)
+    private LocalTimeService(string timeZoneId, bool throwOnAmbiguousOrSkipped, Func<DateTimeOffset>? utcNowFactory)
     {
         _timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId)
             ?? throw new ArgumentException($"Could not resolve time zone: '{timeZoneId}'", nameof(timeZoneId));
 
-        ThrowOnInvalidLocalTime = throwOnInvalidLocalTime;
+        ThrowOnAmbiguousOrSkipped = throwOnAmbiguousOrSkipped;
 
         UtcNowFactory = utcNowFactory ?? (static () => DateTimeOffset.UtcNow);
     }
 
     public Func<DateTimeOffset> UtcNowFactory { get; }
 
-    public bool ThrowOnInvalidLocalTime { get; }
+    public bool ThrowOnAmbiguousOrSkipped { get; }
 
     public string TimeZoneId => _timeZone.Id;
 
@@ -41,17 +41,17 @@ public class LocalTimeService : ILocalTimeService
 
     public static LocalTimeService Create(
         string timeZoneId,
-        bool throwOnInvalidLocalTime = DefaultThrowOnInvalidInputTime,
+        bool throwOnAmbiguousOrSkipped = DefaultThrowOnAmbiguousOrSkipped,
         Func<DateTimeOffset>? utcNowFactory = null)
-        => new LocalTimeService(timeZoneId, throwOnInvalidLocalTime, utcNowFactory);
+        => new LocalTimeService(timeZoneId, throwOnAmbiguousOrSkipped, utcNowFactory);
 
     public object HealthCheck() => HealthCheck(UtcNow);
 
     public DateTimeOffset GetDateTimeOffset(DateTime local)
-        => GetDateTimeOffset(local, ThrowOnInvalidLocalTime);
+        => GetDateTimeOffset(local, ThrowOnAmbiguousOrSkipped);
 
-    public DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnInvalidLocalTime)
-        => GetZonedDateTime(local, throwOnInvalidLocalTime).ToDateTimeOffset();
+    public DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnAmbiguousOrSkipped)
+        => GetZonedDateTime(local, throwOnAmbiguousOrSkipped).ToDateTimeOffset();
 
     public DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input)
         => GetZonedDateTime(input).ToDateTimeOffset();
@@ -59,10 +59,10 @@ public class LocalTimeService : ILocalTimeService
     internal ZonedDateTime GetZonedDateTime(DateTimeOffset input)
         => Instant.FromDateTimeOffset(input).InZone(_timeZone);
 
-    internal ZonedDateTime GetZonedDateTime(DateTime input, bool throwOnInvalidLocalTime)
+    internal ZonedDateTime GetZonedDateTime(DateTime input, bool throwOnAmbiguousOrSkipped)
     {
         var localDateTime = LocalDateTime.FromDateTime(input);
-        return throwOnInvalidLocalTime
+        return throwOnAmbiguousOrSkipped
             ? localDateTime.InZoneStrictly(_timeZone)
             : localDateTime.InZoneLeniently(_timeZone);
     }
@@ -74,7 +74,7 @@ public class LocalTimeService : ILocalTimeService
             TimeZoneId,
             UtcNow = utcNow,
             LocalNow = GetLocalDateTimeOffset(utcNow),
-            ThrowOnInvalidLocalTime,
+            ThrowOnAmbiguousOrSkipped,
         };
     }
 }

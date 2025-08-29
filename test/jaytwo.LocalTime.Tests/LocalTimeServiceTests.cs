@@ -36,11 +36,11 @@ public class LocalTimeServiceTests
     [Theory]
     [InlineData("2025-03-09T02:30:00.000", "2025-03-09T03:30:00.000-06:00")]
     [InlineData("2025-11-02T01:30:00.000", "2025-11-02T01:30:00.000-06:00")]
-    public void GetDateTimeOffset_resolves_time_leniently_with_class_throwOnInvalidLocalTime_false(string inputString, string expectedString)
+    public void GetDateTimeOffset_resolves_time_leniently_with_class_throwOnAmbiguousOrSkipped_false(string inputString, string expectedString)
     {
         // arragne
         var zone = "America/Denver";
-        var sut = new LocalTimeService(zone, throwOnInvalidLocalTime: false);
+        var sut = new LocalTimeService(zone, throwOnAmbiguousOrSkipped: false);
         var input = DateTime.Parse(inputString);
         var expected = DateTimeOffset.Parse(expectedString);
 
@@ -54,7 +54,7 @@ public class LocalTimeServiceTests
     [Theory]
     [InlineData("2025-03-09T02:30:00.000", "2025-03-09T03:30:00.000-06:00")]
     [InlineData("2025-11-02T01:30:00.000", "2025-11-02T01:30:00.000-06:00")]
-    public void GetDateTimeOffset_resolves_time_leniently_with_method_throwOnInvalidLocalTime_false(string inputString, string expectedString)
+    public void GetDateTimeOffset_resolves_time_leniently_with_method_throwOnAmbiguousOrSkipped_false(string inputString, string expectedString)
     {
         // arragne
         var zone = "America/Denver";
@@ -63,7 +63,7 @@ public class LocalTimeServiceTests
         var expected = DateTimeOffset.Parse(expectedString);
 
         // act
-        var actual = sut.GetDateTimeOffset(input, throwOnInvalidLocalTime: false);
+        var actual = sut.GetDateTimeOffset(input, throwOnAmbiguousOrSkipped: false);
 
         // assert
         Assert.Equal(expected, actual);
@@ -72,11 +72,11 @@ public class LocalTimeServiceTests
     [Theory]
     [InlineData("2025-03-09T02:30:00.000")]
     [InlineData("2025-11-02T01:30:00.000")]
-    public void GetDateTimeOffset_throws_with_class_throwOnInvalidLocalTime_true(string inputString)
+    public void GetDateTimeOffset_throws_with_class_throwOnAmbiguousOrSkipped_true(string inputString)
     {
         // arragne
         var zone = "America/Denver";
-        var sut = new LocalTimeService(zone, throwOnInvalidLocalTime: true);
+        var sut = new LocalTimeService(zone, throwOnAmbiguousOrSkipped: true);
         var input = DateTime.Parse(inputString);
 
         // act & assert
@@ -86,7 +86,7 @@ public class LocalTimeServiceTests
     [Theory]
     [InlineData("2025-03-09T02:30:00.000")]
     [InlineData("2025-11-02T01:30:00.000")]
-    public void GetDateTimeOffset_throws_with_method_throwOnInvalidLocalTime_true(string inputString)
+    public void GetDateTimeOffset_throws_with_method_throwOnAmbiguousOrSkipped_true(string inputString)
     {
         // arragne
         var zone = "America/Denver";
@@ -94,7 +94,7 @@ public class LocalTimeServiceTests
         var input = DateTime.Parse(inputString);
 
         // act & assert
-        var exception = Assert.ThrowsAny<Exception>(() => sut.GetDateTimeOffset(input, throwOnInvalidLocalTime: true));
+        var exception = Assert.ThrowsAny<Exception>(() => sut.GetDateTimeOffset(input, throwOnAmbiguousOrSkipped: true));
     }
 
     [Theory]

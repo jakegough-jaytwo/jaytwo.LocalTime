@@ -26,10 +26,10 @@ public class LocalTimeTranslatorTests
     [Theory]
     [InlineData("2025-11-02T01:30:00")]
     [InlineData("2025-03-09T02:30:00")]
-    public void ToOutputDateTime_Throws_with_class_throwOnInvalidInputTime_true(string inputString)
+    public void ToOutputDateTime_Throws_with_class_throwOnAmbiguousOrSkipped_true(string inputString)
     {
         // arragne
-        var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles", throwOnInvalidInputTime: true);
+        var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles", throwOnAmbiguousOrSkipped: true);
         var input = DateTime.Parse(inputString);
 
         // act & assert
@@ -39,23 +39,23 @@ public class LocalTimeTranslatorTests
     [Theory]
     [InlineData("2025-11-02T01:30:00")]
     [InlineData("2025-03-09T02:30:00")]
-    public void ToOutputDateTime_Throws_with_method_throwOnInvalidInputTime_true(string inputString)
+    public void ToOutputDateTime_Throws_with_method_throwOnAmbiguousOrSkipped_true(string inputString)
     {
         // arragne
         var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles");
         var input = DateTime.Parse(inputString);
 
         // act & assert
-        var exception = Assert.ThrowsAny<Exception>(() => sut.ToOutputDateTime(input, throwOnInvalidInputTime: true));
+        var exception = Assert.ThrowsAny<Exception>(() => sut.ToOutputDateTime(input, throwOnAmbiguousOrSkipped: true));
     }
 
     [Theory]
     [InlineData("2025-11-02T01:30:00", "2025-11-02T00:30:00")]
     [InlineData("2025-03-09T02:30:00", "2025-03-09T01:30:00")]
-    public void ToOutputDateTime_resolves_with_class_throwOnInvalidInputTime_false(string inputString, string expectedString)
+    public void ToOutputDateTime_resolves_with_class_throwOnAmbiguousOrSkipped_false(string inputString, string expectedString)
     {
         // arragne
-        var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles", throwOnInvalidInputTime: false);
+        var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles", throwOnAmbiguousOrSkipped: false);
         var input = DateTime.Parse(inputString);
         var expected = DateTime.Parse(expectedString);
 
@@ -69,7 +69,7 @@ public class LocalTimeTranslatorTests
     [Theory]
     [InlineData("2025-11-02T01:30:00", "2025-11-02T00:30:00")]
     [InlineData("2025-03-09T02:30:00", "2025-03-09T01:30:00")]
-    public void ToOutputDateTime_resolves_with_method_throwOnInvalidInputTime_false(string inputString, string expectedString)
+    public void ToOutputDateTime_resolves_with_method_throwOnAmbiguousOrSkipped_false(string inputString, string expectedString)
     {
         // arragne
         var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles");
@@ -77,7 +77,7 @@ public class LocalTimeTranslatorTests
         var expected = DateTime.Parse(expectedString);
 
         // act
-        var actual = sut.ToOutputDateTime(input, throwOnInvalidInputTime: false);
+        var actual = sut.ToOutputDateTime(input, throwOnAmbiguousOrSkipped: false);
 
         // assert
         Assert.Equal(expected, actual);
@@ -103,10 +103,10 @@ public class LocalTimeTranslatorTests
     [Theory]
     [InlineData("2025-11-02T01:30:00")]
     [InlineData("2025-03-09T02:30:00")]
-    public void ToOutputDateTimeOffset_Throws_with_class_throwOnInvalidInputTime_true(string inputString)
+    public void ToOutputDateTimeOffset_Throws_with_class_throwOnAmbiguousOrSkipped_true(string inputString)
     {
         // arragne
-        var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles", throwOnInvalidInputTime: true);
+        var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles", throwOnAmbiguousOrSkipped: true);
         var input = DateTime.Parse(inputString);
 
         // act & assert
@@ -116,23 +116,23 @@ public class LocalTimeTranslatorTests
     [Theory]
     [InlineData("2025-11-02T01:30:00")]
     [InlineData("2025-03-09T02:30:00")]
-    public void ToOutputDateTimeOffset_Throws_with_method_throwOnInvalidInputTime_true(string inputString)
+    public void ToOutputDateTimeOffset_Throws_with_method_throwOnAmbiguousOrSkipped_true(string inputString)
     {
         // arragne
         var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles");
         var input = DateTime.Parse(inputString);
 
         // act & assert
-        var exception = Assert.ThrowsAny<Exception>(() => sut.ToOutputDateTimeOffset(input, throwOnInvalidInputTime: true));
+        var exception = Assert.ThrowsAny<Exception>(() => sut.ToOutputDateTimeOffset(input, throwOnAmbiguousOrSkipped: true));
     }
 
     [Theory]
     [InlineData("2025-11-02T01:30:00", "2025-11-02T07:30:00+00:00")]
     [InlineData("2025-03-09T02:30:00", "2025-03-09T09:30:00+00:00")]
-    public void ToOutputDateTimeOffset_resolves_with_class_throwOnInvalidInputTime_false(string inputString, string expectedString)
+    public void ToOutputDateTimeOffset_resolves_with_class_throwOnAmbiguousOrSkipped_false(string inputString, string expectedString)
     {
         // arragne
-        var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles", throwOnInvalidInputTime: false);
+        var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles", throwOnAmbiguousOrSkipped: false);
         var input = DateTime.Parse(inputString);
         var expected = DateTimeOffset.Parse(expectedString);
 
@@ -146,7 +146,7 @@ public class LocalTimeTranslatorTests
     [Theory]
     [InlineData("2025-11-02T01:30:00", "2025-11-02T07:30:00+00:00")]
     [InlineData("2025-03-09T02:30:00", "2025-03-09T09:30:00+00:00")]
-    public void ToOutputDateTimeOffset_resolves_with_method_throwOnInvalidInputTime_false(string inputString, string expectedString)
+    public void ToOutputDateTimeOffset_resolves_with_method_throwOnAmbiguousOrSkipped_false(string inputString, string expectedString)
     {
         // arragne
         var sut = new LocalTimeTranslator("America/Denver", "America/Los_Angeles");
@@ -154,7 +154,7 @@ public class LocalTimeTranslatorTests
         var expected = DateTimeOffset.Parse(expectedString);
 
         // act
-        var actual = sut.ToOutputDateTimeOffset(input, throwOnInvalidInputTime: false);
+        var actual = sut.ToOutputDateTimeOffset(input, throwOnAmbiguousOrSkipped: false);
 
         // assert
         Assert.Equal(expected, actual);

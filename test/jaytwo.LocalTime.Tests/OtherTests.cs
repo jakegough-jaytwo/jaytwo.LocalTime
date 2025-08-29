@@ -8,7 +8,7 @@ public class OtherTests
 {
     [Theory]
     [InlineData("2025-01-01T12:34:56")]
-    [InlineData("2025-01-01T12:34:56.789")]
+    [InlineData("2025-01-01T12:34:56.7891234")]
     public void DateTime_Parse_Quirky_DateTimeKind_Unspecified(string inputString)
     {
         // arragne
@@ -37,7 +37,7 @@ public class OtherTests
 
         // assert
         Assert.Equal(DateTimeKind.Local, actual.Kind);
-        Assert.Equal(inputAsOffset.LocalDateTime, actual); // always Kind = Local
+        Assert.Equal(inputAsOffset.LocalDateTime, actual);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class OtherTests
         var inputKind = DateTimeKind.Local;
         var input = DateTime.SpecifyKind(DateTime.Parse(inputString), inputKind);
         var inputAsOffset = DateTimeOffset.Parse(inputString);
-        var expected = inputAsOffset.ToString("o", CultureInfo.InvariantCulture);
+        var expected = inputAsOffset.ToString("o", CultureInfo.InvariantCulture); // a "Local" DateTimeKind ToString() appends the local offset
 
         // act
         var actual = input.ToString("o", CultureInfo.InvariantCulture);
@@ -65,13 +65,12 @@ public class OtherTests
         var inputKind = DateTimeKind.Utc;
         var input = DateTime.SpecifyKind(DateTime.Parse(inputString), inputKind);
         var inputAsOffset = DateTimeOffset.Parse(inputString);
-        var expected = inputString + "Z";
 
         // act
         var actual = input.ToString("o", CultureInfo.InvariantCulture);
 
         // assert
-        Assert.Equal(expected, actual);
+        Assert.Equal(inputString + "Z", actual);
     }
 
     [Fact]
@@ -82,12 +81,11 @@ public class OtherTests
         var inputKind = DateTimeKind.Unspecified;
         var input = DateTime.SpecifyKind(DateTime.Parse(inputString), inputKind);
         var inputAsOffset = DateTimeOffset.Parse(inputString);
-        var expected = inputString;
 
         // act
         var actual = input.ToString("o", CultureInfo.InvariantCulture);
 
         // assert
-        Assert.Equal(expected, actual);
+        Assert.Equal(inputString, actual);
     }
 }

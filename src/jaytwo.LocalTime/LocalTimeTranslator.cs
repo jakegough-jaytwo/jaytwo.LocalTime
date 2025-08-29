@@ -4,12 +4,10 @@ namespace jaytwo.LocalTime;
 
 public class LocalTimeTranslator : ILocalTimeTranslator
 {
-    internal const bool DefaultThrowOnInvalidLocalTime = LocalTimeService.DefaultThrowOnInvalidInputTime;
-
-    public LocalTimeTranslator(string inputTimeZoneId, string outputTimeZoneId, bool throwOnInvalidInputTime = DefaultThrowOnInvalidLocalTime)
+    public LocalTimeTranslator(string inputTimeZoneId, string outputTimeZoneId, bool throwOnAmbiguousOrSkipped = LocalTimeService.DefaultThrowOnAmbiguousOrSkipped)
         : this(
-            inputLocalTimeService: new LocalTimeService(inputTimeZoneId, throwOnInvalidInputTime),
-            outputLocalTimeService: new LocalTimeService(outputTimeZoneId, throwOnInvalidInputTime))
+            inputLocalTimeService: new LocalTimeService(inputTimeZoneId, throwOnAmbiguousOrSkipped),
+            outputLocalTimeService: new LocalTimeService(outputTimeZoneId, throwOnAmbiguousOrSkipped))
     {
     }
 
@@ -48,9 +46,9 @@ public class LocalTimeTranslator : ILocalTimeTranslator
     /// Converts a local wall-clock <paramref name="localInput"/> in <see cref="InputTimeZoneId"/>
     /// to the equivalent local <see cref="DateTimeOffset"/> in <see cref="OutputTimeZoneId"/>.
     /// </summary>
-    public DateTimeOffset ToOutputDateTimeOffset(DateTime input, bool throwOnInvalidInputTime)
+    public DateTimeOffset ToOutputDateTimeOffset(DateTime input, bool throwOnAmbiguousOrSkipped)
         => OutputLocalTimeService.GetLocalDateTimeOffset(
-            InputLocalTimeService.GetDateTimeOffset(input, throwOnInvalidInputTime));
+            InputLocalTimeService.GetDateTimeOffset(input, throwOnAmbiguousOrSkipped));
 
     /// <summary>
     /// Same as <see cref="ToOutputLocalDateTimeOffset(DateTime)"/>, returning the local wall-clock
@@ -63,6 +61,6 @@ public class LocalTimeTranslator : ILocalTimeTranslator
     /// Same as <see cref="ToOutputLocalDateTimeOffset(DateTime)"/>, returning the local wall-clock
     /// <see cref="DateTime"/> (Kind=Unspecified) in <see cref="OutputTimeZoneId"/>.
     /// </summary>
-    public DateTime ToOutputDateTime(DateTime input, bool throwOnInvalidInputTime)
-        => ToOutputDateTimeOffset(input, throwOnInvalidInputTime).DateTime;
+    public DateTime ToOutputDateTime(DateTime input, bool throwOnAmbiguousOrSkipped)
+        => ToOutputDateTimeOffset(input, throwOnAmbiguousOrSkipped).DateTime;
 }
