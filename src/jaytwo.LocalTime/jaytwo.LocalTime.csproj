@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="3.2.2" />
+    <PackageReference Include="jaytwo.Rounding" Version="0.1.2-*" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
 using System;
+using jaytwo.Rounding;
 using NodaTime;
 
 namespace jaytwo.LocalTime;
@@ -6,25 +7,22 @@ namespace jaytwo.LocalTime;
 public class LocalTimeService : ILocalTimeService
 {
     internal const bool DefaultThrowOnAmbiguousOrSkipped = false;
+    internal const TimePrecision DefaultNowPrecision = TimePrecision.None;
 
     private readonly DateTimeZone _timeZone;
 
-    public LocalTimeService(string timeZoneId)
-        : this(timeZoneId, throwOnAmbiguousOrSkipped: DefaultThrowOnAmbiguousOrSkipped)
-    {
-    }
-
-    public LocalTimeService(string timeZoneId, bool throwOnAmbiguousOrSkipped)
-        : this(timeZoneId, throwOnAmbiguousOrSkipped, utcNowFactory: null)
-    {
-    }
-
-    private LocalTimeService(string timeZoneId, bool throwOnAmbiguousOrSkipped, Func<DateTimeOffset>? utcNowFactory)
+    public LocalTimeService(
+        string timeZoneId,
+        bool throwOnAmbiguousOrSkipped = DefaultThrowOnAmbiguousOrSkipped,
+        TimePrecision nowPrecision = DefaultNowPrecision,
+        Func<DateTimeOffset>? utcNowFactory = null)
     {
         _timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId)
             ?? throw new ArgumentException($"Could not resolve time zone: '{timeZoneId}'", nameof(timeZoneId));
 
         ThrowOnAmbiguousOrSkipped = throwOnAmbiguousOrSkipped;
+
+        NowPrecision = nowPrecision;
 
         UtcNowFactory = utcNowFactory ?? (static () => DateTimeOffset.UtcNow);
     }
@@ -33,17 +31,13 @@ public class LocalTimeService : ILocalTimeService
 
     public bool ThrowOnAmbiguousOrSkipped { get; }
 
+    public TimePrecision NowPrecision { get; }
+
     public string TimeZoneId => _timeZone.Id;
 
-    public DateTimeOffset UtcNow => UtcNowFactory.Invoke();
+    public DateTimeOffset UtcNow => Truncate(UtcNowFactory.Invoke(), NowPrecision);
 
     public DateTimeOffset LocalNow => GetLocalDateTimeOffset(UtcNow);
-
-    public static LocalTimeService Create(
-        string timeZoneId,
-        bool throwOnAmbiguousOrSkipped = DefaultThrowOnAmbiguousOrSkipped,
-        Func<DateTimeOffset>? utcNowFactory = null)
-        => new LocalTimeService(timeZoneId, throwOnAmbiguousOrSkipped, utcNowFactory);
 
     public object HealthCheck() => HealthCheck(UtcNow);
 
@@ -56,8 +50,24 @@ public class LocalTimeService : ILocalTimeService
     public DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input)
         => GetZonedDateTime(input).ToDateTimeOffset();
 
+    internal static DateTimeOffset Truncate(DateTimeOffset input, TimePrecision truncation)
+    {
+        if (truncation == TimePrecision.None)
+        {
+            return input;
+        }
+        else
+        {
+            var precision = GetTimePrecision(truncation);
+            return TimeQuantizer.Quantize(input, precision, QuantizationMode.Truncate);
+        }
+    }
+
     internal ZonedDateTime GetZonedDateTime(DateTimeOffset input)
-        => Instant.FromDateTimeOffset(input).InZone(_timeZone);
+    {
+        var instant = Instant.FromDateTimeOffset(input);
+        return instant.InZone(_timeZone);
+    }
 
     internal ZonedDateTime GetZonedDateTime(DateTime input, bool throwOnAmbiguousOrSkipped)
     {
@@ -74,7 +84,20 @@ public class LocalTimeService : ILocalTimeService
             TimeZoneId,
             UtcNow = utcNow,
             LocalNow = GetLocalDateTimeOffset(utcNow),
+            TimestampResolution = NowPrecision.ToString("G"),
             ThrowOnAmbiguousOrSkipped,
+        };
+    }
+
+    private static Rounding.TimePrecision GetTimePrecision(TimePrecision truncation)
+    {
+        return truncation switch
+        {
+            TimePrecision.Microsecond => Rounding.TimePrecision.Microsecond,
+            TimePrecision.Millisecond => Rounding.TimePrecision.Millisecond,
+            TimePrecision.Second => Rounding.TimePrecision.Second,
+            TimePrecision.Minute => Rounding.TimePrecision.Minute,
+            _ => throw new NotSupportedException($"The specified truncation is not supported: {truncation}"),
         };
     }
 }

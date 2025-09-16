@@ -155,7 +155,7 @@ public class LocalTimeServiceTests
     {
         // arrange
         var input = DateTimeOffset.Parse(inputString);
-        var sut = LocalTimeService.Create(zone, utcNowFactory: () => input);
+        var sut = new LocalTimeService(zone, utcNowFactory: () => input);
         var expected = DateTimeOffset.Parse(expectedString);
 
         // act
@@ -185,11 +185,51 @@ public class LocalTimeServiceTests
     {
         // arrange
         var input = DateTimeOffset.Parse(inputString);
-        var sut = LocalTimeService.Create(zone, utcNowFactory: () => input);
+        var sut = new LocalTimeService(zone, utcNowFactory: () => input);
         var expected = DateTimeOffset.Parse(expectedString);
 
         // act
         var actual = sut.UtcNow;
+
+        // assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("America/Denver", TimePrecision.None, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T12:34:56.12345678+00:00")]
+    [InlineData("America/Denver", TimePrecision.Microsecond, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T12:34:56.123456+00:00")]
+    [InlineData("America/Denver", TimePrecision.Millisecond, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T12:34:56.123+00:00")]
+    [InlineData("America/Denver", TimePrecision.Second, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T12:34:56.000+00:00")]
+    [InlineData("America/Denver", TimePrecision.Minute, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T12:34:00.000+00:00")]
+    public void UtcNow_WithPrevision_return_expected(string zone, TimePrecision precision, string inputString, string expectedString)
+    {
+        // arrange
+        var input = DateTimeOffset.Parse(inputString);
+        var sut = new LocalTimeService(zone, nowPrecision: precision, utcNowFactory: () => input);
+        var expected = DateTimeOffset.Parse(expectedString);
+
+        // act
+        var actual = sut.UtcNow;
+
+        // assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("America/Denver", TimePrecision.None, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T05:34:56.12345678-07:00")]
+    [InlineData("America/Denver", TimePrecision.Microsecond, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T05:34:56.123456-07:00")]
+    [InlineData("America/Denver", TimePrecision.Millisecond, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T05:34:56.123-07:00")]
+    [InlineData("America/Denver", TimePrecision.Second, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T05:34:56.000-07:00")]
+    [InlineData("America/Denver", TimePrecision.Minute, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T05:34:00.000-07:00")]
+    public void LocalNow_WithPrevision_return_expected(string zone, TimePrecision precision, string inputString, string expectedString)
+    {
+        // arrange
+        var input = DateTimeOffset.Parse(inputString);
+        var sut = new LocalTimeService(zone, nowPrecision: precision, utcNowFactory: () => input);
+        var expected = DateTimeOffset.Parse(expectedString);
+
+        // act
+        var actual = sut.LocalNow;
 
         // assert
         Assert.Equal(expected, actual);
