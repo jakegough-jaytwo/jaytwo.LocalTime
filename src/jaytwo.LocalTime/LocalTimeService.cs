@@ -1,6 +1,7 @@
 using System;
 using jaytwo.Rounding;
 using NodaTime;
+using NodaTime.TimeZones;
 
 namespace jaytwo.LocalTime;
 
@@ -46,6 +47,45 @@ public class LocalTimeService : ILocalTimeService
 
     public DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnAmbiguousOrSkipped)
         => GetZonedDateTime(local, throwOnAmbiguousOrSkipped).ToDateTimeOffset();
+
+    public ResolveTimeResult Resolve(DateTime local)
+    {
+        var localDateTime = LocalDateTime.FromDateTime(local);
+        var mapping = _timeZone.MapLocal(localDateTime);
+
+        if (mapping.Count == 0)
+        {
+            // skipped time
+            return new ResolveTimeResult()
+            {
+                ForwardShifted = Resolvers.ReturnForwardShifted(localDateTime, _timeZone, mapping.EarlyInterval, mapping.LateInterval).ToDateTimeOffset(),
+                StartOfIntervalAfter = mapping.LateInterval.IsoLocalStart.InZoneStrictly(_timeZone).ToDateTimeOffset(),
+            };
+        }
+        else if (mapping.Count == 1)
+        {
+            // unambiguous time
+            return new ResolveTimeResult
+            {
+                Matches = new[]
+                {
+                    mapping.First().ToDateTimeOffset(),
+                },
+            };
+        }
+        else
+        {
+            // ambiguous time
+            return new ResolveTimeResult
+            {
+                Matches = new[]
+                {
+                    mapping.First().ToDateTimeOffset(),
+                    mapping.Last().ToDateTimeOffset(),
+                },
+            };
+        }
+    }
 
     public DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input)
         => GetZonedDateTime(input).ToDateTimeOffset();

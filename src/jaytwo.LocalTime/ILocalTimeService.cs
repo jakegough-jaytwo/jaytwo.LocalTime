@@ -12,6 +12,8 @@ public interface ILocalTimeService
 
     object HealthCheck();
 
+    ResolveTimeResult Resolve(DateTime local);
+
     DateTimeOffset GetDateTimeOffset(DateTime local);
 
     DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnAmbiguousOrSkipped);

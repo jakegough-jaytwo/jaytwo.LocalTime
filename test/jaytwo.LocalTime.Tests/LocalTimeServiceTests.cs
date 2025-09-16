@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NodaTime;
 using Xunit;
 
@@ -70,9 +71,8 @@ public class LocalTimeServiceTests
     }
 
     [Theory]
-    [InlineData("2025-03-09T02:30:00.000")]
     [InlineData("2025-11-02T01:30:00.000")]
-    public void GetDateTimeOffset_throws_with_class_throwOnAmbiguousOrSkipped_true(string inputString)
+    public void GetDateTimeOffset_throws_AmbiguousTimeException_with_class_throwOnAmbiguousOrSkipped_true(string inputString)
     {
         // arragne
         var zone = "America/Denver";
@@ -80,7 +80,20 @@ public class LocalTimeServiceTests
         var input = DateTime.Parse(inputString);
 
         // act & assert
-        var exception = Assert.ThrowsAny<Exception>(() => sut.GetDateTimeOffset(input));
+        var exception = Assert.Throws<AmbiguousTimeException>(() => sut.GetDateTimeOffset(input));
+    }
+
+    [Theory]
+    [InlineData("2025-03-09T02:30:00.000")]
+    public void GetDateTimeOffset_throws_SkippedTimeException_with_class_throwOnAmbiguousOrSkipped_true(string inputString)
+    {
+        // arragne
+        var zone = "America/Denver";
+        var sut = new LocalTimeService(zone, throwOnAmbiguousOrSkipped: true);
+        var input = DateTime.Parse(inputString);
+
+        // act & assert
+        var exception = Assert.Throws<SkippedTimeException>(() => sut.GetDateTimeOffset(input));
     }
 
     [Theory]
@@ -233,5 +246,75 @@ public class LocalTimeServiceTests
 
         // assert
         Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("America/Denver", "2025-11-02T00:59:00")]
+    [InlineData("America/Denver", "2025-11-02T02:00:00")]
+    [InlineData("America/Denver", "2025-03-09T01:59:00")]
+    [InlineData("America/Denver", "2025-03-09T03:00:00")]
+    public void Resolve_Unambiguous_Times(string zone, string inputString)
+    {
+        // arrange
+        var input = DateTime.Parse(inputString);
+        var sut = new LocalTimeService(zone);
+        var expected = sut.GetDateTimeOffset(input, throwOnAmbiguousOrSkipped: true);
+
+        // act
+        var actual = sut.Resolve(input);
+
+        // assert
+        Assert.False(actual.IsSkipped());
+        Assert.False(actual.IsAmbiguous());
+        var match = Assert.Single(actual.Matches);
+        Assert.Equal(expected, match);
+        Assert.Null(actual.ForwardShifted);
+        Assert.Null(actual.StartOfIntervalAfter);
+    }
+
+    [Theory]
+    [InlineData("America/Denver", "2025-03-09T02:00:00", "2025-03-09T03:00:00-06:00", "2025-03-09T03:00:00-06:00")]
+    [InlineData("America/Denver", "2025-03-09T02:59:59", "2025-03-09T03:00:00-06:00", "2025-03-09T03:59:59-06:00")]
+    public void Resolve_Skipped_Times(string zone, string inputString, string expectedStartOfIntervalAfterString, string expectedForwardShiftedString)
+    {
+        // arrange
+        var input = DateTime.Parse(inputString);
+        var sut = new LocalTimeService(zone);
+        var expectedForwardShifted = DateTimeOffset.Parse(expectedForwardShiftedString);
+        var expectedStartOfIntervalAfter = DateTimeOffset.Parse(expectedStartOfIntervalAfterString);
+
+        // act
+        var actual = sut.Resolve(input);
+
+        // assert
+        Assert.True(actual.IsSkipped());
+        Assert.False(actual.IsAmbiguous());
+        Assert.Empty(actual.Matches);
+        Assert.Equal(expectedForwardShifted, actual.ForwardShifted);
+        Assert.Equal(expectedStartOfIntervalAfter, actual.StartOfIntervalAfter);
+    }
+
+    [Theory]
+    [InlineData("America/Denver", "2025-11-02T01:00:00", "2025-11-02T01:00:00-06:00", "2025-11-02T01:00:00-07:00")]
+    [InlineData("America/Denver", "2025-11-02T01:59:59", "2025-11-02T01:59:59-06:00", "2025-11-02T01:59:59-07:00")]
+    public void Resolve_Ambiguous_Times(string zone, string inputString, string expectedFirstMatchString, string expectedlastMatchString)
+    {
+        // arrange
+        var input = DateTime.Parse(inputString);
+        var sut = new LocalTimeService(zone);
+        var expectedFirstMatch = DateTimeOffset.Parse(expectedFirstMatchString);
+        var expectedlastMatch = DateTimeOffset.Parse(expectedlastMatchString);
+
+        // act
+        var actual = sut.Resolve(input);
+
+        // assert
+        Assert.True(actual.IsAmbiguous());
+        Assert.False(actual.IsSkipped());
+        Assert.Equal(2, actual.Matches.Length);
+        Assert.Equal(expectedFirstMatch, actual.Matches.First());
+        Assert.Equal(expectedlastMatch, actual.Matches.Last());
+        Assert.Null(actual.ForwardShifted);
+        Assert.Null(actual.StartOfIntervalAfter);
     }
 }

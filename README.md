@@ -17,6 +17,8 @@
 * Deterministic "now" injection for **testing**
 * Simple **ASP.NET Core DI** integration (`ILocalTimeService`, `ILocalTimeTranslator`)
 * Based on **IANA TZDB** identifiers (via NodaTime) for reliable cross-platform behavior
+* Verbose DST Resolution API (detect ambiguous/skipped times, see alternatives)
+* Optional truncation of "now" to a specified precision (e.g., seconds) for database compatibility
 
 ## Installation
 
@@ -69,7 +71,7 @@ var elapsed = localTimeService.Subtract(
     DateTime.Parse("2025-11-02T00:00:00")); // returns 4 hours
 ```
 
-4) Zone → zone translation
+3) Zone → zone translation
 
 ```csharp
 var localTimeTranslator = new LocalTimeTranslator("America/Denver", "America/Los_Angeles");
@@ -79,6 +81,51 @@ var losAngelesDateTimeOffset = localTimeTranslator.ToOutputDateTimeOffset(someDe
 
 // Or get a local DateTime in the output zone
 var losAngelesDateTime = localTimeTranslator.ToOutputDateTime(someDenverDateTime);
+```
+
+> Note: Using `nowPrecision` only affects `LocalNow` and `UtcNow`; it does not truncate time values passed to other methods.
+
+4) Verbose DST Resolution
+
+```csharp
+// In the US, for a 'fall back' DST transition, the 1 AM hour repeats
+var ambiguousLocalTime = DateTime.Parse("2025-11-02T01:30:00");
+
+// resolve with details
+var resolved = localTimeService.Resolve(ambiguousLocalTime);
+
+// resolved.IsAmbiguous()        → true
+// resolved.IsSkipped()          → false
+// resolved.Matches[0]           → 2025-11-02T01:30:00-06:00
+// resolved.Matches[1]           → 2025-11-02T01:30:00-07:00
+// resolved.ForwardShifted       → null
+// resolved.StartOfIntervalAfter → null
+```
+
+```csharp
+// In the US, for a 'spring forward' DST transition, the 2 AM hour is skipped
+var skippedLocalTime = DateTime.Parse("2025-03-09T02:30:00");
+
+// resolve with details
+var resolved = localTimeService.Resolve(skippedLocalTime);
+
+// resolved.IsAmbiguous()        → false
+// resolved.IsSkipped()          → true
+// resolved.Matches              → (empty)
+// resolved.ForwardShifted       → 2025-03-09T03:30:00-07:00
+// resolved.StartOfIntervalAfter → 2025-03-09T03:00:00-07:00
+```
+
+**Quantized `Now`**
+
+Optionally truncate "now" to a specified precision (e.g., seconds, milliseconds) for database compatibility.  Though
+the `DateTime` type can represent time with sub-microsecond precision, sometimes other systems (e.g., databases) do not.
+
+```csharp
+var service = new LocalTimeService("America/Denver", nowPrecision: TimePrecision.Second);
+
+// DateTimeOffset.Now   → 2025-01-01T12:34:56.78987654-07:00 (full sub-microsecond precision)
+// service.LocalNow     → 2025-01-01T12:34:56.00000000-07:00 (truncated to second precision)
 ```
 
 **Injecting with DI (typical ASP.NET Core)**
