@@ -130,6 +130,25 @@ public class LocalTimeServiceTests
     }
 
     [Theory]
+    [InlineData(DateTimeKind.Unspecified)]
+    [InlineData(DateTimeKind.Local)]
+    [InlineData(DateTimeKind.Utc)]
+    public void GetDateTimeOffset_works_with_any_DateTimeKind(DateTimeKind kind)
+    {
+        // arrange
+        var timeZoneId = "America/Denver";
+        var timeZoneCronSchedule = new LocalTimeService(timeZoneId);
+        var expected = DateTimeOffset.Parse("1970-01-01 01:01:01.001-07:00");
+        var inputDateTime = new DateTime(1970, 01, 01, 01, 01, 01, 01, kind);
+
+        // act
+        var actual = timeZoneCronSchedule.GetDateTimeOffset(inputDateTime);
+
+        // assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
     [InlineData("America/Denver", "2025-01-01T12:34:56.789+00:00", "2025-01-01T05:34:56.789-07:00")]
     [InlineData("America/Denver", "2025-07-01T12:34:56.789+00:00", "2025-07-01T06:34:56.789-06:00")]
     [InlineData("America/Los_Angeles", "2025-01-01T12:34:56.789+00:00", "2025-01-01T04:34:56.789-08:00")]
