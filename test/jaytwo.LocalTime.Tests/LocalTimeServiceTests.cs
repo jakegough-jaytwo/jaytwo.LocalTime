@@ -347,7 +347,7 @@ public class LocalTimeServiceTests
         // arrange
         var input = DateTime.Parse(inputStr);
         var sut = new LocalTimeService(zone, firstDayOfWeek: firstDayOfWeek);
-        var expected = DateTimeOffset.Parse(expectedStr);
+        var expected = DateTime.Parse(expectedStr);
 
         // act
         var actual = sut.GetStartOfWeek(input);
@@ -365,7 +365,7 @@ public class LocalTimeServiceTests
     public void GetStartOfWeek_DateTimeOffset_Returns_Expected(string zone, string inputStr, DayOfWeek firstDayOfWeek, string expectedStr)
     {
         // arrange
-        var input = DateTime.Parse(inputStr);
+        var input = DateTimeOffset.Parse(inputStr);
         var sut = new LocalTimeService(zone, firstDayOfWeek: firstDayOfWeek);
         var expected = DateTimeOffset.Parse(expectedStr);
 
