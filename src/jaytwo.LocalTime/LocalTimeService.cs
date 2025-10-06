@@ -136,7 +136,7 @@ public class LocalTimeService : ILocalTimeService
             TimeZoneId,
             UtcNow = utcNow,
             LocalNow = GetLocalDateTimeOffset(utcNow),
-            TimestampResolution = NowPrecision.ToString("G"),
+            NowPrecision = NowPrecision.ToString("G"),
             ThrowOnAmbiguousOrSkipped,
         };
     }

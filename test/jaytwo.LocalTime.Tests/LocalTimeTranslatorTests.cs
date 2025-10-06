@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace jaytwo.LocalTime.Tests;
@@ -158,5 +159,37 @@ public class LocalTimeTranslatorTests
 
         // assert
         Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("America/Denver", "America/Los_Angeles")]
+    [InlineData("America/Los_Angeles", "America/Denver")]
+    public void InputTimeZoneId_and_OutputTimeZoneId_return_values_from_ctor(string inputTimeZoneId, string outputTimeZoneId)
+    {
+        // arragne
+
+        // act
+        var sut = new LocalTimeTranslator(inputTimeZoneId, outputTimeZoneId);
+
+        // assert
+        Assert.Equal(inputTimeZoneId, sut.InputTimeZoneId);
+        Assert.Equal(outputTimeZoneId, sut.OutputTimeZoneId);
+    }
+
+    [Fact]
+    public void HealthCheck_returns_TimeZoneId_from_inner_LocalTimeService()
+    {
+        // arragne
+        var inputTimeZoneId = "America/Denver";
+        var outputTimeZoneId = "America/Los_Angeles";
+        var sut = new LocalTimeTranslator(inputTimeZoneId, outputTimeZoneId);
+
+        // act
+        dynamic result = sut.HealthCheck();
+
+        // assert
+        Assert.NotNull(result);
+        Assert.Equal(inputTimeZoneId, result.InputLocalTimeService.TimeZoneId);
+        Assert.Equal(outputTimeZoneId, result.OutputLocalTimeService.TimeZoneId);
     }
 }

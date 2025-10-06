@@ -233,7 +233,7 @@ public class LocalTimeServiceTests
     [InlineData("America/Denver", TimePrecision.Millisecond, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T12:34:56.123+00:00")]
     [InlineData("America/Denver", TimePrecision.Second, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T12:34:56.000+00:00")]
     [InlineData("America/Denver", TimePrecision.Minute, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T12:34:00.000+00:00")]
-    public void UtcNow_WithPrevision_return_expected(string zone, TimePrecision precision, string inputString, string expectedString)
+    public void UtcNow_WithPrecision_return_expected(string zone, TimePrecision precision, string inputString, string expectedString)
     {
         // arrange
         var input = DateTimeOffset.Parse(inputString);
@@ -253,7 +253,7 @@ public class LocalTimeServiceTests
     [InlineData("America/Denver", TimePrecision.Millisecond, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T05:34:56.123-07:00")]
     [InlineData("America/Denver", TimePrecision.Second, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T05:34:56.000-07:00")]
     [InlineData("America/Denver", TimePrecision.Minute, "2025-01-01T12:34:56.12345678+00:00", "2025-01-01T05:34:00.000-07:00")]
-    public void LocalNow_WithPrevision_return_expected(string zone, TimePrecision precision, string inputString, string expectedString)
+    public void LocalNow_WithPrecision_return_expected(string zone, TimePrecision precision, string inputString, string expectedString)
     {
         // arrange
         var input = DateTimeOffset.Parse(inputString);
@@ -337,6 +337,19 @@ public class LocalTimeServiceTests
         Assert.Null(actual.StartOfIntervalAfter);
     }
 
+    [Fact]
+    public void Truncate_InvalidNowPrecision_ThrowsNotSupportedException()
+    {
+        // arragne
+        var precision = (TimePrecision)(-1);
+
+        // act
+        var ex = Assert.Throws<NotSupportedException>(
+            () => LocalTimeService.Truncate(DateTimeOffset.UtcNow, precision));
+
+        // assert
+    }
+
     [Theory]
     [InlineData("America/Denver", "2023-01-12 01:23:45", DayOfWeek.Sunday, "2023-01-08T00:00:00-07:00")]
     [InlineData("America/Denver", "2023-01-12 01:23:45", DayOfWeek.Monday, "2023-01-09T00:00:00-07:00")]
@@ -374,5 +387,26 @@ public class LocalTimeServiceTests
 
         // assert
         Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("America/Denver", "2023-01-07T23:12:34+00:00", "2023-01-07T16:12:34-07:00", TimePrecision.Second)]
+    [InlineData("America/Los_Angeles", "2023-01-07T23:12:34.567+00:00", "2023-01-07T15:12:34.567-08:00", TimePrecision.Millisecond)]
+    public void HealthCheck_returns_expected_values(string zone, string utcNowStr, string localNowStr, TimePrecision nowPrecision)
+    {
+        // arragne
+        var utcNow = DateTimeOffset.Parse(utcNowStr);
+        var localNow = DateTimeOffset.Parse(localNowStr);
+        var sut = new LocalTimeService(zone, nowPrecision: nowPrecision, utcNowFactory: () => utcNow);
+
+        // act
+        dynamic result = sut.HealthCheck();
+
+        // assert
+        Assert.NotNull(result);
+        Assert.Equal(zone, result.TimeZoneId);
+        Assert.Equal(utcNow, result.UtcNow);
+        Assert.Equal(localNow, result.LocalNow);
+        Assert.Equal(nowPrecision.ToString("G"), result.NowPrecision);
     }
 }
