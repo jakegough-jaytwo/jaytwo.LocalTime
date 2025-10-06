@@ -19,4 +19,8 @@ public interface ILocalTimeService
     DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnAmbiguousOrSkipped);
 
     DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input);
+
+    DateTimeOffset GetStartOfWeek(DateTime local);
+
+    DateTimeOffset GetStartOfWeek(DateTimeOffset input);
 }

@@ -9,6 +9,7 @@ public class LocalTimeService : ILocalTimeService
 {
     internal const bool DefaultThrowOnAmbiguousOrSkipped = false;
     internal const TimePrecision DefaultNowPrecision = TimePrecision.None;
+    internal const DayOfWeek DefaultFirstDayOfWeek = DayOfWeek.Sunday;
 
     private readonly DateTimeZone _timeZone;
 
@@ -16,6 +17,7 @@ public class LocalTimeService : ILocalTimeService
         string timeZoneId,
         bool throwOnAmbiguousOrSkipped = DefaultThrowOnAmbiguousOrSkipped,
         TimePrecision nowPrecision = DefaultNowPrecision,
+        DayOfWeek firstDayOfWeek = DefaultFirstDayOfWeek,
         Func<DateTimeOffset>? utcNowFactory = null)
     {
         _timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId)
@@ -25,6 +27,8 @@ public class LocalTimeService : ILocalTimeService
 
         NowPrecision = nowPrecision;
 
+        FirstDayOfWeek = firstDayOfWeek;
+
         UtcNowFactory = utcNowFactory ?? (static () => DateTimeOffset.UtcNow);
     }
 
@@ -33,6 +37,8 @@ public class LocalTimeService : ILocalTimeService
     public bool ThrowOnAmbiguousOrSkipped { get; }
 
     public TimePrecision NowPrecision { get; }
+
+    public DayOfWeek FirstDayOfWeek { get; }
 
     public string TimeZoneId => _timeZone.Id;
 
@@ -89,6 +95,12 @@ public class LocalTimeService : ILocalTimeService
 
     public DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input)
         => GetZonedDateTime(input).ToDateTimeOffset();
+
+    public DateTimeOffset GetStartOfWeek(DateTime local)
+        => GetDateTimeOffset(TimeQuantizer.StartOfWeek(local, FirstDayOfWeek));
+
+    public DateTimeOffset GetStartOfWeek(DateTimeOffset input)
+        => GetStartOfWeek(GetLocalDateTimeOffset(input).DateTime);
 
     internal static DateTimeOffset Truncate(DateTimeOffset input, TimePrecision truncation)
     {
