@@ -260,6 +260,25 @@ public class LocalTimeServiceExtensionsTests
     }
 
     [Theory]
+    [InlineData("America/Denver", "2025-01-01", "2025-01-01T00:00:00.000-07:00")]
+    [InlineData("America/Denver", "2025-07-01", "2025-07-01T00:00:00.000-06:00")]
+    [InlineData("America/Los_Angeles", "2025-01-01", "2025-01-01T00:00:00.000-08:00")]
+    [InlineData("America/Los_Angeles", "2025-07-01", "2025-07-01T00:00:00.000-07:00")]
+    public void GetDateTimeOffset_with_DateOnly_ReturnsExpected(string zone, string dateString, string expectedString)
+    {
+        // arragne
+        var sut = new LocalTimeService(zone);
+        var dateOnly = DateOnly.Parse(dateString);
+        var expected = DateTimeOffset.Parse(expectedString);
+
+        // act
+        var actual = sut.GetDateTimeOffset(dateOnly);
+
+        // assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
     [InlineData("America/Denver", "2025-01-01T12:34:56.789+00:00", "2025-01-01T05:34:56.789")]
     [InlineData("America/Denver", "2025-07-01T12:34:56.789+00:00", "2025-07-01T06:34:56.789")]
     [InlineData("America/Los_Angeles", "2025-01-01T12:34:56.789+00:00", "2025-01-01T04:34:56.789")]

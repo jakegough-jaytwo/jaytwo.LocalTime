@@ -14,6 +14,10 @@ public interface ILocalTimeService
 
     ResolveTimeResult Resolve(DateTime local);
 
+#if NET6_0_OR_GREATER
+    DateTimeOffset GetDateTimeOffset(DateOnly localDate, TimeOnly localTime);
+#endif
+
     DateTimeOffset GetDateTimeOffset(DateTime local);
 
     DateTimeOffset GetDateTimeOffset(DateTime local, bool throwOnAmbiguousOrSkipped);
@@ -21,6 +25,10 @@ public interface ILocalTimeService
     DateTimeOffset GetLocalDateTimeOffset(DateTimeOffset input);
 
     DateTimeOffset GetStartOfWeek(DateTime local);
+
+#if NET6_0_OR_GREATER
+    DateTimeOffset GetStartOfWeek(DateOnly localDate);
+#endif
 
     DateTimeOffset GetStartOfWeek(DateTimeOffset input);
 }

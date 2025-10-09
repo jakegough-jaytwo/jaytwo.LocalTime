@@ -48,6 +48,11 @@ public class LocalTimeService : ILocalTimeService
 
     public object HealthCheck() => HealthCheck(UtcNow);
 
+#if NET6_0_OR_GREATER
+    public DateTimeOffset GetDateTimeOffset(DateOnly localDate, TimeOnly localTime)
+        => GetDateTimeOffset(localDate.ToDateTime(localTime, DateTimeKind.Unspecified));
+#endif
+
     public DateTimeOffset GetDateTimeOffset(DateTime local)
         => GetDateTimeOffset(local, ThrowOnAmbiguousOrSkipped);
 
@@ -98,6 +103,11 @@ public class LocalTimeService : ILocalTimeService
 
     public DateTimeOffset GetStartOfWeek(DateTime local)
         => GetDateTimeOffset(TimeQuantizer.StartOfWeek(local, FirstDayOfWeek));
+
+#if NET6_0_OR_GREATER
+    public DateTimeOffset GetStartOfWeek(DateOnly local)
+        => GetDateTimeOffset(TimeQuantizer.StartOfWeek(local, FirstDayOfWeek), TimeOnly.MinValue);
+#endif
 
     public DateTimeOffset GetStartOfWeek(DateTimeOffset input)
         => GetStartOfWeek(GetLocalDateTimeOffset(input).DateTime);

@@ -130,6 +130,26 @@ public class LocalTimeServiceTests
     }
 
     [Theory]
+    [InlineData("America/Denver", "2025-01-01", "12:34:56.789", "2025-01-01T12:34:56.789-07:00")]
+    [InlineData("America/Denver", "2025-07-01", "12:34:56.789", "2025-07-01T12:34:56.789-06:00")]
+    [InlineData("America/Los_Angeles", "2025-01-01", "12:34:56.789", "2025-01-01T12:34:56.789-08:00")]
+    [InlineData("America/Los_Angeles", "2025-07-01", "12:34:56.789", "2025-07-01T12:34:56.789-07:00")]
+    public void GetDateTimeOffset_with_DateOnly_TimeOnly_ReturnsExpected(string zone, string dateString, string timeString, string expectedString)
+    {
+        // arragne
+        var sut = new LocalTimeService(zone);
+        var dateOnly = DateOnly.Parse(dateString);
+        var timeOnly = TimeOnly.Parse(timeString);
+        var expected = DateTimeOffset.Parse(expectedString);
+
+        // act
+        var actual = sut.GetDateTimeOffset(dateOnly, timeOnly);
+
+        // assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
     [InlineData(DateTimeKind.Unspecified)]
     [InlineData(DateTimeKind.Local)]
     [InlineData(DateTimeKind.Utc)]
@@ -348,6 +368,25 @@ public class LocalTimeServiceTests
             () => LocalTimeService.Truncate(DateTimeOffset.UtcNow, precision));
 
         // assert
+    }
+
+    [Theory]
+    [InlineData("America/Denver", "2023-01-12", DayOfWeek.Sunday, "2023-01-08T00:00:00-07:00")]
+    [InlineData("America/Denver", "2023-01-12", DayOfWeek.Monday, "2023-01-09T00:00:00-07:00")]
+    [InlineData("America/Denver", "2023-07-12", DayOfWeek.Sunday, "2023-07-09T00:00:00-06:00")]
+    [InlineData("America/Denver", "2023-07-12", DayOfWeek.Monday, "2023-07-10T00:00:00-06:00")]
+    public void GetStartOfWeek_DateOnly_Returns_Expected(string zone, string inputStr, DayOfWeek firstDayOfWeek, string expectedStr)
+    {
+        // arrange
+        var input = DateOnly.Parse(inputStr);
+        var sut = new LocalTimeService(zone, firstDayOfWeek: firstDayOfWeek);
+        var expected = DateTime.Parse(expectedStr);
+
+        // act
+        var actual = sut.GetStartOfWeek(input);
+
+        // assert
+        Assert.Equal(expected, actual);
     }
 
     [Theory]

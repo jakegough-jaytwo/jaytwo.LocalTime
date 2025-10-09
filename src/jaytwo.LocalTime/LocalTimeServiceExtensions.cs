@@ -30,6 +30,11 @@ public static class LocalTimeServiceExtensions
         => localTimeService.GetLocalDateTimeOffset(
             localTimeService.GetDateTimeOffset(localBaseTime, throwOnAmbiguousOrSkipped).Add(duration));
 
+#if NET6_0_OR_GREATER
+    public static DateTimeOffset GetDateTimeOffset(this ILocalTimeService localTimeService, DateOnly localDate)
+        => localTimeService.GetDateTimeOffset(localDate, TimeOnly.MinValue);
+#endif
+
     public static DateTime GetLocalDateTime(this ILocalTimeService localTimeService, DateTimeOffset input)
         => localTimeService.GetLocalDateTimeOffset(input).DateTime;
 
