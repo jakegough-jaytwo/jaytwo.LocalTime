@@ -6,6 +6,8 @@ public interface ILocalTimeService
 {
     string TimeZoneId { get; }
 
+    DayOfWeek FirstDayOfWeek { get; }
+
     DateTimeOffset UtcNow { get; }
 
     DateTimeOffset LocalNow { get; }
