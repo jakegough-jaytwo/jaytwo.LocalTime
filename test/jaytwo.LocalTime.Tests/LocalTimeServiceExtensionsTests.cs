@@ -259,6 +259,7 @@ public class LocalTimeServiceExtensionsTests
         Assert.Equal(expected, actual);
     }
 
+#if NET6_0_OR_GREATER
     [Theory]
     [InlineData("America/Denver", "2025-01-01", "2025-01-01T00:00:00.000-07:00")]
     [InlineData("America/Denver", "2025-07-01", "2025-07-01T00:00:00.000-06:00")]
@@ -277,6 +278,7 @@ public class LocalTimeServiceExtensionsTests
         // assert
         Assert.Equal(expected, actual);
     }
+#endif
 
     [Theory]
     [InlineData("America/Denver", "2025-01-01T12:34:56.789+00:00", "2025-01-01T05:34:56.789")]

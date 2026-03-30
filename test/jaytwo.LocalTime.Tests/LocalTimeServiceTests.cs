@@ -129,6 +129,7 @@ public class LocalTimeServiceTests
         Assert.Equal(expected, actual);
     }
 
+#if NET6_0_OR_GREATER
     [Theory]
     [InlineData("America/Denver", "2025-01-01", "12:34:56.789", "2025-01-01T12:34:56.789-07:00")]
     [InlineData("America/Denver", "2025-07-01", "12:34:56.789", "2025-07-01T12:34:56.789-06:00")]
@@ -148,6 +149,7 @@ public class LocalTimeServiceTests
         // assert
         Assert.Equal(expected, actual);
     }
+#endif
 
     [Theory]
     [InlineData(DateTimeKind.Unspecified)]
@@ -370,6 +372,7 @@ public class LocalTimeServiceTests
         // assert
     }
 
+#if NET6_0_OR_GREATER
     [Theory]
     [InlineData("America/Denver", "2023-01-12", DayOfWeek.Sunday, "2023-01-08T00:00:00-07:00")]
     [InlineData("America/Denver", "2023-01-12", DayOfWeek.Monday, "2023-01-09T00:00:00-07:00")]
@@ -388,6 +391,7 @@ public class LocalTimeServiceTests
         // assert
         Assert.Equal(expected, actual);
     }
+#endif
 
     [Theory]
     [InlineData("America/Denver", "2023-01-12 01:23:45", DayOfWeek.Sunday, "2023-01-08T00:00:00-07:00")]
